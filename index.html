@@ -4,191 +4,263 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .quiz-container { font-family: 'Inter', sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+        .quiz-card { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 20px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.05); }
+        button { cursor: pointer; font-weight: 600; }
+        .result { margin-top: 10px; font-size: 0.9rem; font-weight: 500; }
+        .hint { font-size: 0.85rem; color: #64748b; margin-bottom: 8px; font-style: italic; }
+        .sentence-box { font-size: 1.1rem; font-weight: 600; color: #312e81; background: #e0e7ff; padding: 12px; border-left: 4px solid #4f46e5; border-radius: 6px; margin-bottom: 12px; }
+    </style>
 </head>
-<body class="bg-slate-50 p-6 flex justify-center">
-    <div class="max-w-md w-full bg-white p-6 rounded-xl shadow-md border border-slate-200">
-        <h3 class="text-lg font-bold mb-1">🎤 English Pronunciation Lab</h3>
-        <p id="counter" class="text-sm text-slate-500 mb-1">Frase 1 de 8</p>
-        
-        <!-- Dica em Português -->
-        <div id="hint-display" class="text-xs text-slate-500 mb-4 italic font-medium">
-            💡 Dica: Ele está considerando se aposentar mais cedo.
-        </div>
-        
-        <div id="sentence-display" class="p-4 bg-indigo-50 border-l-4 border-indigo-600 rounded mb-4 font-medium text-indigo-900 text-lg">
-            "He's considering taking early retirement."
-        </div>
+<body class="bg-slate-50">
+    <div class="quiz-container">
+        <h3 class="text-xl font-bold mb-2">🎤 English Pronunciation Lab</h3>
+        <p class="text-slate-500 text-sm mb-6">Leia a frase em inglês em voz alta, preste atenção nos <i>linking sounds</i> e grave sua pronúncia.</p>
 
-        <div class="flex gap-2 mb-2">
-            <button id="listen-btn" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg font-bold hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
-            <button id="start-btn" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition">Começar</button>
-        </div>
+        <script>
+            // Objeto para gerenciar o estado dos gravadores de cada card
+            const mediaRecorders = {};
+            const audioChunksMap = {};
+            const recognitionMap = {};
+            const isListeningMap = {};
 
-        <!-- Player para o aluno se ouvir -->
-        <div id="audio-container" class="mb-4 hidden">
-            <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
-            <audio id="user-audio" controls class="w-full"></audio>
-        </div>
+            function normalize(text) {
+                return text.toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            }
 
-        <div class="flex gap-2 mb-4">
-            <button id="skip-btn" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold hover:bg-slate-200 transition">Pular Frase →</button>
-            <button id="next-btn" class="hidden flex-1 bg-emerald-600 text-white py-2 rounded-lg font-bold hover:bg-emerald-700 transition">Próxima Frase →</button>
-        </div>
+            function playAI(sentence) {
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
 
-        <div id="feedback" class="mt-4 p-3 rounded text-sm hidden font-medium"></div>
+            function setupCardRecorder(id) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorders[id] = new MediaRecorder(stream);
+                        audioChunksMap[id] = [];
+
+                        mediaRecorders[id].ondataavailable = event => {
+                            audioChunksMap[id].push(event.data);
+                        };
+
+                        mediaRecorders[id].onstop = () => {
+                            const audioBlob = new Blob(audioChunksMap[id], { type: 'audio/webm' });
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            const audioEl = document.getElementById('user-audio-' + id);
+                            audioEl.src = audioUrl;
+                            document.getElementById('audio-container-' + id).classList.remove('hidden');
+                        };
+                    })
+                    .catch(err => console.log("Microphone access error:", err));
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    recognitionMap[id] = new SpeechRecognition();
+                    recognitionMap[id].lang = 'en-US';
+                    recognitionMap[id].continuous = false;
+
+                    recognitionMap[id].onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const target = document.getElementById('target-sentence-' + id).value;
+                        const resultEl = document.getElementById('result-' + id);
+
+                        const normTranscript = normalize(transcript);
+                        const normTarget = normalize(target);
+
+                        if (normTranscript === normTarget) {
+                            resultEl.className = "result p-3 rounded text-sm bg-green-100 text-green-800";
+                            resultEl.innerHTML = "✅ Excellent! Perfect pronunciation and linking sounds!";
+                        } else {
+                            resultEl.className = "result p-3 rounded text-sm bg-red-100 text-red-800";
+                            resultEl.innerHTML = `❌ <strong>You said:</strong> '${transcript}'.<br><br>⚠️ <strong>Pronunciation Tip:</strong> Focus on natural word blending (linking sounds), sentence stress, and vowel articulation. Listen to the AI and your recording to compare!`;
+                        }
+                    };
+
+                    recognitionMap[id].onend = () => {
+                        isListeningMap[id] = false;
+                        const btn = document.getElementById('btn-record-' + id);
+                        btn.innerText = "Começar Gravação";
+                        btn.className = "flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-indigo-700 transition";
+                        if (mediaRecorders[id] && mediaRecorders[id].state === "recording") {
+                            mediaRecorders[id].stop();
+                        }
+                    };
+                }
+            }
+
+            function toggleRecording(id) {
+                const btn = document.getElementById('btn-record-' + id);
+                const resultEl = document.getElementById('result-' + id);
+
+                if (!isListeningMap[id]) {
+                    // Iniciar
+                    isListeningMap[id] = true;
+                    btn.innerText = "Parar Gravação";
+                    btn.className = "flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-red-700 transition";
+                    
+                    resultEl.className = "result p-3 rounded text-sm bg-yellow-100 text-yellow-800";
+                    resultEl.innerText = "Ouvindo e gravando sua voz...";
+
+                    audioChunksMap[id] = [];
+                    if (mediaRecorders[id] && mediaRecorders[id].state === "inactive") {
+                        mediaRecorders[id].start();
+                    }
+                    if (recognitionMap[id]) {
+                        recognitionMap[id].start();
+                    }
+                } else {
+                    // Parar
+                    if (recognitionMap[id]) {
+                        recognitionMap[id].stop();
+                    }
+                    if (mediaRecorders[id] && mediaRecorders[id].state === "recording") {
+                        mediaRecorders[id].stop();
+                    }
+                }
+            }
+        </script>
+
+        <!-- Frase 1 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-1" value="He's considering taking early retirement.">
+            <div class="hint">💡 Dica: Ele está considerando se aposentar mais cedo.</div>
+            <div class="sentence-box">"He's considering taking early retirement."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-1').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-1" onclick="toggleRecording(1)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-1" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-1" controls class="w-full"></audio>
+            </div>
+            <p id="result-1" class="result"></p>
+        </div>
+        <script>setupCardRecorder(1);</script>
+
+        <!-- Frase 2 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-2" value="He is being very noisy right now.">
+            <div class="hint">💡 Dica: Ele está fazendo muito barulho agora mesmo.</div>
+            <div class="sentence-box">"He is being very noisy right now."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-2').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-2" onclick="toggleRecording(2)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-2" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-2" controls class="w-full"></audio>
+            </div>
+            <p id="result-2" class="result"></p>
+        </div>
+        <script>setupCardRecorder(2);</script>
+
+        <!-- Frase 3 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-3" value="The train leaves at 8:30 PM tonight.">
+            <div class="hint">💡 Dica: O trem parte às 8:30 da noite de hoje.</div>
+            <div class="sentence-box">"The train leaves at 8:30 PM tonight."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-3').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-3" onclick="toggleRecording(3)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-3" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-3" controls class="w-full"></audio>
+            </div>
+            <p id="result-3" class="result"></p>
+        </div>
+        <script>setupCardRecorder(3);</script>
+
+        <!-- Frase 4 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-4" value="You are always interrupting me during meetings.">
+            <div class="hint">💡 Dica: Você está sempre me interrompendo durante as reuniões.</div>
+            <div class="sentence-box">"You are always interrupting me during meetings."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-4').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-4" onclick="toggleRecording(4)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-4" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-4" controls class="w-full"></audio>
+            </div>
+            <p id="result-4" class="result"></p>
+        </div>
+        <script>setupCardRecorder(4);</script>
+
+        <!-- Frase 5 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-5" value="I apologize for being late to the meeting.">
+            <div class="hint">💡 Dica: Peço desculpas por estar atrasado para a reunião.</div>
+            <div class="sentence-box">"I apologize for being late to the meeting."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-5').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-5" onclick="toggleRecording(5)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-5" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-5" controls class="w-full"></audio>
+            </div>
+            <p id="result-5" class="result"></p>
+        </div>
+        <script>setupCardRecorder(5);</script>
+
+        <!-- Frase 6 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-6" value="We have a nice room in the hotel.">
+            <div class="hint">💡 Dica: Nós temos um quarto legal no hotel.</div>
+            <div class="sentence-box">"We have a nice room in the hotel."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-6').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-6" onclick="toggleRecording(6)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-6" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-6" controls class="w-full"></audio>
+            </div>
+            <p id="result-6" class="result"></p>
+        </div>
+        <script>setupCardRecorder(6);</script>
+
+        <!-- Frase 7 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-7" value="Adams makes a wonderful return. She is playing magnificent tennis in this match.">
+            <div class="hint">💡 Dica: Adams faz um retorno maravilhoso. Ela está jogando um tênis magnífico nesta partida.</div>
+            <div class="sentence-box">"Adams makes a wonderful return. She is playing magnificent tennis in this match."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-7').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-7" onclick="toggleRecording(7)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-7" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-7" controls class="w-full"></audio>
+            </div>
+            <p id="result-7" class="result"></p>
+        </div>
+        <script>setupCardRecorder(7);</script>
+
+        <!-- Frase 8 -->
+        <div class="quiz-card">
+            <input type="hidden" id="target-sentence-8" value="The population of the world is rising very fast.">
+            <div class="hint">💡 Dica: A população mundial está crescendo muito rápido.</div>
+            <div class="sentence-box">"The population of the world is rising very fast."</div>
+            <div class="flex gap-2 mb-3">
+                <button onclick="playAI(document.getElementById('target-sentence-8').value)" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 transition">Ouvir Frase (IA)</button>
+                <button id="btn-record-8" onclick="toggleRecording(8)" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Começar Gravação</button>
+            </div>
+            <div id="audio-container-8" class="mb-3 hidden">
+                <p class="text-xs text-slate-500 mb-1 font-medium">🎧 Ouça sua gravação:</p>
+                <audio id="user-audio-8" controls class="w-full"></audio>
+            </div>
+            <p id="result-8" class="result"></p>
+        </div>
+        <script>setupCardRecorder(8);</script>
     </div>
-
-    <script>
-        const sentences = [
-            "He's considering taking early retirement.",
-            "He is being very noisy right now.",
-            "The train leaves at 8:30 PM tonight.",
-            "You are always interrupting me during meetings.",
-            "I apologize for being late to the meeting.",
-            "We have a nice room in the hotel.",
-            "Adams makes a wonderful return. She is playing magnificent tennis in this match.",
-            "The population of the world is rising very fast."
-        ];
-
-        const hints = [
-            "💡 Dica: Ele está considerando se aposentar mais cedo.",
-            "💡 Dica: Ele está fazendo muito barulho agora mesmo.",
-            "💡 Dica: O trem parte às 8:30 da noite de hoje.",
-            "💡 Dica: Você está sempre me interrompendo durante as reuniões.",
-            "💡 Dica: Peço desculpas por estar atrasado para a reunião.",
-            "💡 Dica: Nós temos um quarto legal no hotel.",
-            "💡 Dica: Adams faz um retorno maravilhoso. Ela está jogando um tênis magnífico nesta partida.",
-            "💡 Dica: A população mundial está crescendo muito rápido."
-        ];
-        
-        let currentIndex = 0;
-        let isListening = false;
-        let mediaRecorder;
-        let audioChunks = [];
-        
-        const display = document.getElementById('sentence-display');
-        const hintDisplay = document.getElementById('hint-display');
-        const startBtn = document.getElementById('start-btn');
-        const listenBtn = document.getElementById('listen-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const skipBtn = document.getElementById('skip-btn');
-        const feedback = document.getElementById('feedback');
-        const counter = document.getElementById('counter');
-        const audioContainer = document.getElementById('audio-container');
-        const userAudio = document.getElementById('user-audio');
-        
-        function normalize(text) {
-            return text.toLowerCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
-        }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US'; // Configurado para inglês dos EUA
-        recognition.continuous = false;
-
-        function updateUI() {
-            display.innerText = '"' + sentences[currentIndex] + '"';
-            hintDisplay.innerText = hints[currentIndex];
-            counter.innerText = "Frase " + (currentIndex + 1) + " de " + sentences.length;
-            feedback.classList.add('hidden');
-            nextBtn.classList.add('hidden');
-            audioContainer.classList.add('hidden');
-        }
-
-        listenBtn.onclick = () => {
-            const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
-        };
-
-        // Configuração de Gravação de Áudio do Aluno
-        async function setupRecorder() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    userAudio.src = audioUrl;
-                    audioContainer.classList.remove('hidden');
-                };
-            } catch (err) {
-                console.log("Microphone access denied or not supported", err);
-            }
-        }
-        setupRecorder();
-
-        startBtn.onclick = () => {
-            if (!isListening) {
-                isListening = true;
-                startBtn.innerText = "Parar";
-                startBtn.className = "flex-1 bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 transition";
-                feedback.innerText = "Ouvindo e gravando...";
-                feedback.className = "mt-4 p-3 rounded text-sm text-center bg-yellow-100 text-yellow-800";
-                feedback.classList.remove('hidden');
-                
-                audioChunks = [];
-                if (mediaRecorder && mediaRecorder.state === "inactive") {
-                    mediaRecorder.start();
-                }
-                
-                recognition.start();
-            } else {
-                recognition.stop();
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.stop();
-                }
-            }
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            startBtn.innerText = "Começar";
-            startBtn.className = "flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition";
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-            }
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            const normTranscript = normalize(transcript);
-            const normTarget = normalize(sentences[currentIndex]);
-            
-            if (normTranscript === normTarget) {
-                feedback.className = "mt-4 p-3 rounded text-sm text-center bg-green-100 text-green-800";
-                feedback.innerText = "✅ Excellent! Perfect pronunciation and linking sounds!";
-                nextBtn.classList.remove('hidden');
-            } else {
-                feedback.className = "mt-4 p-3 rounded text-sm text-left bg-red-100 text-red-800";
-                feedback.innerHTML = `❌ <strong>You said:</strong> '${transcript}'.<br><br>⚠️ <strong>Pronunciation & Linking Tip:</strong> Pay attention to natural word blending (linking sounds), sentence stress, and vowel sounds. Listen to the AI audio and your own recording above to compare, then try again or click 'Pular Frase'.`;
-                nextBtn.classList.remove('hidden');
-            }
-        };
-
-        skipBtn.onclick = nextBtn.onclick = () => {
-            currentIndex++;
-            if (currentIndex < sentences.length) {
-                updateUI();
-            } else {
-                display.innerText = "Parabéns! Você completou todas as frases.";
-                hintDisplay.innerText = "🎉 Prática finalizada com sucesso!";
-                document.querySelector('.flex.gap-2.mb-2').classList.add('hidden');
-                document.querySelector('.flex.gap-2.mb-4').classList.add('hidden');
-                feedback.classList.add('hidden');
-                audioContainer.classList.add('hidden');
-                counter.innerText = "Concluído";
-            }
-        };
-    </script>
 </body>
 </html>
