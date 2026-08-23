@@ -3,545 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Present Simple vs. Present Continuous Masterclass Challenge</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Source Sans 3', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .app-container {
-            background-color: #1e293b;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            width: 100%;
-            max-width: 800px;
-            padding: 40px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #334155;
-        }
-        h1, h2, h3 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .screen {
-            display: none;
-            flex-direction: column;
-            gap: 25px;
-        }
-        .screen.active {
-            display: flex;
-        }
-        .welcome-screen {
-            text-align: center;
-            align-items: center;
-        }
-        .welcome-screen h1 {
-            font-size: 38px;
-            color: #38bdf8;
-            margin-bottom: 10px;
-        }
-        .welcome-screen p {
-            font-size: 18px;
-            color: #94a3b8;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-        .btn {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            padding: 14px 32px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
-        }
-        .btn:active {
-            transform: translateY(0);
-        }
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 15px;
-        }
-        .progress-indicator {
-            font-size: 16px;
-            font-weight: 600;
-            color: #38bdf8;
-        }
-        .timer-badge {
-            background-color: #0f172a;
-            border: 2px solid #38bdf8;
-            border-radius: 30px;
-            padding: 6px 16px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 700;
-            font-size: 16px;
-            color: #38bdf8;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .timer-badge.warning {
-            border-color: #ef4444;
-            color: #ef4444;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .question-box h2 {
-            font-size: 22px;
-            line-height: 1.5;
-            color: #f1f5f9;
-        }
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-        .option-btn {
-            background-color: #334155;
-            border: 2px solid #475569;
-            border-radius: 10px;
-            color: #f8fafc;
-            cursor: pointer;
-            font-size: 17px;
-            padding: 16px 20px;
-            text-align: left;
-            transition: all 0.2s ease;
-            font-family: 'Source Sans 3', sans-serif;
-        }
-        .option-btn:hover:not(:disabled) {
-            background-color: #475569;
-            border-color: #38bdf8;
-        }
-        .option-btn.correct {
-            background-color: rgba(16, 185, 129, 0.2);
-            border-color: #10b981;
-            color: #34d399;
-        }
-        .option-btn.incorrect {
-            background-color: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-            color: #f87171;
-        }
-        .rationale-box {
-            background-color: #0f172a;
-            border-left: 4px solid #38bdf8;
-            border-radius: 0 8px 8px 0;
-            padding: 15px;
-            font-size: 16px;
-            color: #94a3b8;
-            line-height: 1.5;
-            display: none;
-        }
-        .rationale-box.visible {
-            display: block;
-        }
-        .action-footer {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-        .score-screen {
-            text-align: center;
-            align-items: center;
-            padding: 20px 0;
-        }
-        .score-screen h1 {
-            font-size: 42px;
-            color: #38bdf8;
-            margin-bottom: 10px;
-        }
-        .score-badge {
-            background-color: #334155;
-            border-radius: 50%;
-            width: 140px;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            margin: 20px auto;
-            border: 4px solid #0ea5e9;
-        }
-        .score-badge span:first-child {
-            font-size: 40px;
-            font-weight: 700;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #f8fafc;
-        }
-        .score-badge span:last-child {
-            font-size: 14px;
-            color: #94a3b8;
-        }
+        .quiz-container { font-family: 'Inter', sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+        .quiz-card { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 20px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.05); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        button { background: #4f46e5; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #4338ca; }
+        .result { margin-top: 10px; font-size: 0.9rem; font-weight: 500; }
+        .hint { font-size: 0.85rem; color: #64748b; margin-bottom: 8px; font-style: italic; }
     </style>
-<style>
-  .lms-source-label {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background-color: #e0e0e0;
-    color: #333333;
-    border-radius: 10px;
-    padding: 4px 4px;
-    font-family: sans-serif;
-    font-size: 10px;
-    pointer-events: none;
-    font-weight: 500;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-</style></head>
+</head>
 <body>
+    <div class="quiz-container">
+        <h3 class="text-xl font-bold mb-2">🎧 English Dictation Exercise</h3>
+        <p class="text-slate-500 text-sm mb-6">Ouça o áudio e transcreva a frase em inglês corretamente. Preste atenção na pronúncia natural (linking sounds).</p>
 
-<div class="app-container">
-    <!-- Welcome Screen -->
-    <div id="welcomeScreen" class="screen active welcome-screen">
-        <i class="fa-solid fa-graduation-cap" style="font-size: 64px; color: #38bdf8; margin-bottom: 10px;"></i>
-        <h1>Present Simple vs. Present Continuous Masterclass</h1>
-        <p>Test your knowledge with 15 highly contextualized game challenges. You have <strong>60 seconds</strong> per question to select the correct option, identify incorrect patterns, or fill in the blanks correctly. All questions and explanations are entirely in English!</p>
-        <button class="btn" onclick="startQuiz()">Start Challenge <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></button>
-    </div>
+        <script>
+            const attempts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0};
 
-    <!-- Quiz Screen -->
-    <div id="quizScreen" class="screen">
-        <div class="quiz-header">
-            <div class="progress-indicator" id="progressIndicator">Question 1 of 15</div>
-            <div class="timer-badge" id="timerBadge"><i class="fa-regular fa-clock"></i> <span id="timeLeft">60</span>s</div>
-        </div>
-        <div class="question-box">
-            <h2 id="questionText">Question text goes here...</h2>
-        </div>
-        <div class="options-grid" id="optionsGrid">
-            <!-- Dynamic options -->
-        </div>
-        <div class="rationale-box" id="rationaleBox">
-            <!-- Dynamic rationale -->
-        </div>
-        <div class="action-footer">
-            <button class="btn" id="nextBtn" style="display: none;" onclick="nextQuestion()">Next Question <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></button>
-        </div>
-    </div>
-
-    <!-- Score Screen -->
-    <div id="scoreScreen" class="screen score-screen">
-        <i class="fa-solid fa-trophy" style="font-size: 56px; color: #facc15;"></i>
-        <h1>Challenge Completed!</h1>
-        <div class="score-badge">
-            <span id="finalScore">0/15</span>
-            <span>Correct</span>
-        </div>
-        <p id="scoreMessage" style="font-size: 18px; color: #94a3b8; margin-bottom: 20px;"></p>
-        <button class="btn" onclick="restartQuiz()">Play Again <i class="fa-solid fa-rotate-right" style="margin-left: 8px;"></i></button>
-    </div>
-</div>
-
-<script>
-    const questions = [
-        {
-            question: "Which of the following sentences correctly uses the Present Simple for a permanent scientific fact?",
-            options: [
-                { text: "Water boils at 100 degrees Celsius.", correct: true, rationale: "Correct! Permanent scientific facts and universal truths are expressed using the Present Simple." },
-                { text: "Water is boiling at 100 degrees Celsius.", correct: false, rationale: "Incorrect. The Present Continuous is reserved for temporary situations or actions happening right now, not eternal scientific facts." },
-                { text: "Water is boil at 100 degrees Celsius.", correct: false, rationale: "Incorrect. This mixes continuous verb endings incorrectly with base verbs." },
-                { text: "Water boil at 100 degrees Celsius.", correct: false, rationale: "Incorrect. Third-person singular subjects ('Water') require an '-s' ending in the Present Simple ('boils')." }
-            ]
-        },
-        {
-            question: "Choose the correct sentence describing an action happening right now at the exact time of speaking:",
-            options: [
-                { text: "Please be quiet! I study for my exam.", correct: false, rationale: "Incorrect. 'Study' as a habit is incorrect here since the speaker is requesting silence for an action in progress right now." },
-                { text: "Please be quiet! I am studying for my exam.", correct: true, rationale: "Correct! The Present Continuous ('am studying') is used for actions in progress at the moment of speaking." },
-                { text: "Please be quiet! I studying for my exam.", correct: false, rationale: "Incorrect. The Present Continuous requires the auxiliary verb 'am/is/are' before the '-ing' verb." },
-                { text: "Please be quiet! I am study for my exam.", correct: false, rationale: "Incorrect. After the auxiliary verb 'am', the main verb must take the '-ing' suffix." }
-            ]
-        },
-        {
-            question: "Which sentence correctly demonstrates a regular routine or frequency using the Present Simple?",
-            options: [
-                { text: "I am waking up at 7:00 AM every weekday.", correct: false, rationale: "Incorrect. Daily routines and habits are expressed using the Present Simple, not the Present Continuous." },
-                { text: "I waking up at 7:00 AM every weekday.", correct: false, rationale: "Incorrect. This sentence lacks the required auxiliary verb or simple verb inflection." },
-                { text: "I wake up at 7:00 AM every weekday.", correct: true, rationale: "Correct! Regular habits and routines are standard use cases for the Present Simple." },
-                { text: "I wakes up at 7:00 AM every weekday.", correct: false, rationale: "Incorrect. The first-person pronoun 'I' takes the base verb form ('wake'), not 'wakes'." }
-            ]
-        },
-        {
-            question: "Which option illustrates a temporary living situation using the Present Continuous?",
-            options: [
-                { text: "I am staying with friends in Boston this week.", correct: true, rationale: "Correct! Temporary situations around the present time take the Present Continuous." },
-                { text: "I stay with friends in Boston this week.", correct: false, rationale: "Incorrect. Present Simple is used for permanent homes, whereas temporary arrangements use Present Continuous." },
-                { text: "I stays with friends in Boston this week.", correct: false, rationale: "Incorrect. The subject 'I' cannot take the '-s' verb ending." },
-                { text: "I staying with friends in Boston this week.", correct: false, rationale: "Incorrect. The auxiliary verb 'am' is missing." }
-            ]
-        },
-        {
-            question: "Identify the correct sentence using a state verb that does not normally take the continuous form:",
-            options: [
-                { text: "I am wanting a cup of coffee right now.", correct: false, rationale: "Incorrect. 'Want' is a state verb of desire and is rarely used in continuous forms." },
-                { text: "I wanting a cup of coffee right now.", correct: false, rationale: "Incorrect. State verbs do not take continuous forms, and this lacks an auxiliary verb." },
-                { text: "I want a cup of coffee right now.", correct: true, rationale: "Correct! State verbs like 'want', 'like', and 'know' are used in the Present Simple even when referring to the current moment." },
-                { text: "I wants a cup of coffee right now.", correct: false, rationale: "Incorrect. The pronoun 'I' takes the base verb 'want', not 'wants'." }
-            ]
-        },
-        {
-            question: "How do you correctly form a negative sentence in the Present Simple for the third-person singular?",
-            options: [
-                { text: "He don't drink tea in the morning.", correct: false, rationale: "Incorrect. Third-person singular ('he/she/it') uses 'doesn't', not 'don't'." },
-                { text: "He doesn't drink tea in the morning.", correct: true, rationale: "Correct! 'Doesn't' is the correct negative auxiliary for third-person singular in Present Simple, followed by the base verb." },
-                { text: "He not drinks tea in the morning.", correct: false, rationale: "Incorrect. Present Simple negation requires 'do/does' + 'not' before the base verb." },
-                { text: "He isn't drink tea in the morning.", correct: false, rationale: "Incorrect. 'Isn't' belongs to the Present Continuous or verb 'be', not standard action verbs in Present Simple." }
-            ]
-        },
-        {
-            question: "Which sentence correctly uses 'always' with the Present Continuous to express annoyance at a repeated habit?",
-            options: [
-                { text: "He always loses his keys!", correct: false, rationale: "Incorrect. While grammatically valid for a regular fact, it does not carry the emotional emphasis of annoyance intended here." },
-                { text: "He is always losing his keys!", correct: true, rationale: "Correct! Pairing 'always' with the Present Continuous expresses frustration or complaints about frequent annoying habits." },
-                { text: "He is always lose his keys!", correct: false, rationale: "Incorrect. The verb after 'always' in this structure must take the '-ing' form." },
-                { text: "He always is losing his keys!", correct: false, rationale: "Incorrect. Word order is incorrect; 'always' goes after the auxiliary verb 'is' in this pattern." }
-            ]
-        },
-        {
-            question: "Choose the correct sentence where the verb 'think' represents a deliberate mental action rather than a state (opinion):",
-            options: [
-                { text: "I am thinking about my upcoming project.", correct: true, rationale: "Correct! When 'think' means mental processing or considering, it can take the continuous form." },
-                { text: "I think about my upcoming project right now.", correct: false, rationale: "While possible, the continuous form specifically highlights active mental engagement at this moment." },
-                { text: "I am think about my upcoming project.", correct: false, rationale: "Incorrect. Missing the '-ing' suffix." },
-                { text: "I thinks about my upcoming project.", correct: false, rationale: "Incorrect. Subject 'I' does not take '-s'." }
-            ]
-        },
-        {
-            question: "Which sentence correctly describes a general trend or changing situation around now?",
-            options: [
-                { text: "The cost of living rises very fast.", correct: false, rationale: "Incorrect. Ongoing gradual changes around the present time are highlighted using the Present Continuous." },
-                { text: "The cost of living is rising very fast.", correct: true, rationale: "Correct! Changing trends and developments around now are expressed with the Present Continuous." },
-                { text: "The cost of living rise very fast.", correct: false, rationale: "Incorrect. Singular noun 'cost' would require 'rises' in simple tense, but continuous is better for ongoing trends." },
-                { text: "The cost of living rising very fast.", correct: false, rationale: "Incorrect. Missing the auxiliary verb 'is'." }
-            ]
-        },
-        {
-            question: "Which sentence correctly uses a performative verb in the Present Simple?",
-            options: [
-                { text: "I am apologizing for being late to the meeting.", correct: false, rationale: "Incorrect. Performative verbs (apologize, promise, suggest) use the Present Simple to perform the action by saying it." },
-                { text: "I apologize for being late to the meeting.", correct: true, rationale: "Correct! Verbs that perform the act simply by being spoken are used in the Present Simple." },
-                { text: "I apologizes for being late to the meeting.", correct: false, rationale: "Incorrect. Pronoun 'I' takes 'apologize'." },
-                { text: "I apologising for being late to the meeting.", correct: false, rationale: "Incorrect. Continuous form is incorrect for performative declarations." }
-            ]
-        },
-        {
-            question: "How do you correctly frame a question in the Present Simple?",
-            options: [
-                { text: "Where you live?", correct: false, rationale: "Incorrect. Present Simple questions require the auxiliary verb 'do/does'." },
-                { text: "Where do you live?", correct: true, rationale: "Correct! 'Where do you [subject] [base verb]?' is the standard structure for Present Simple questions." },
-                { text: "Where does you live?", correct: false, rationale: "Incorrect. 'Does' is used with third-person singular ('he/she/it'), whereas 'you' takes 'do'." },
-                { text: "Where are you live?", correct: false, rationale: "Incorrect. Mixing auxiliary 'are' with a base verb in Present Simple is grammatically invalid." }
-            ]
-        },
-        {
-            question: "Which sentence correctly demonstrates a fixed timetable or official schedule?",
-            options: [
-                { text: "The train is leaving at 8:30 PM tonight.", correct: false, rationale: "While sometimes used for personal plans, official timetables and public schedules strictly use the Present Simple." },
-                { text: "The train leaves at 8:30 PM tonight.", correct: true, rationale: "Correct! Official schedules, timetables, and transit programs use the Present Simple even when referring to future events." },
-                { text: "The train leave at 8:30 PM tonight.", correct: false, rationale: "Incorrect. Third-person singular subject 'The train' requires 'leaves'." },
-                { text: "The train leaveing at 8:30 PM tonight.", correct: false, rationale: "Incorrect. Spelling and auxiliary grammar are incorrect." }
-            ]
-        },
-        {
-            question: "Which sentence correctly highlights a contrast between a permanent situation and a temporary one?",
-            options: [
-                { text: "She works in a bank, but she is working hard today.", correct: true, rationale: "Correct! 'Works' represents her permanent/regular job, while 'is working hard today' highlights temporary extra effort." },
-                { text: "She is working in a bank, but she works hard today.", correct: false, rationale: "Incorrect. This reverses the normal logic of permanent job vs. temporary state." },
-                { text: "She work in a bank, but she working hard today.", correct: false, rationale: "Incorrect. Grammatical errors in verb inflections." },
-                { text: "She works in a bank, but she work hard today.", correct: false, rationale: "Incorrect. Second clause lacks correct verb tense agreement." }
-            ]
-        },
-        {
-            question: "Which sentence correctly uses 'be' in the Present Continuous ('is being') to describe a temporary behavior rather than a general personality?",
-            options: [
-                { text: "He is being very noisy right now.", correct: true, rationale: "Correct! 'Is being + adjective' describes temporary behavior or acting a certain way at this moment." },
-                { text: "He is very noisy right now.", correct: false, rationale: "Acceptable, but 'is being' specifically emphasizes temporary behavior contrasting with normal character." },
-                { text: "He be being very noisy right now.", correct: false, rationale: "Incorrect auxiliary usage." },
-                { text: "He are being very noisy right now.", correct: false, rationale: "Incorrect. Subject 'He' requires 'is', not 'are'." }
-            ]
-        },
-        {
-            question: "Choose the correct sentence describing a background event in a story narrative or live sports commentary:",
-            options: [
-                { text: "Adams makes a wonderful return. She plays magnificent tennis!", correct: false, rationale: "Incorrect. In live sports commentary or narrative backgrounds, ongoing actions use the Present Continuous." },
-                { text: "Adams makes a wonderful return. She is playing magnificent tennis!", correct: true, rationale: "Correct! Main sequence events use Present Simple ('makes'), while ongoing background actions use Present Continuous ('is playing')." },
-                { text: "Adams is making a wonderful return. She plays magnificent tennis!", correct: false, rationale: "Incorrect structure for standard sports commentary highlights." },
-                { text: "Adams make a wonderful return. She is play magnificent tennis!", correct: false, rationale: "Incorrect verb forms." }
-            ]
-        }
-    ];
-
-    let currentQuestionIndex = 0;
-    let score = 0;
-    let timer = null;
-    let timeLeft = 60;
-    let answered = false;
-
-    function startQuiz() {
-        document.getElementById('welcomeScreen').classList.remove('active');
-        document.getElementById('quizScreen').classList.add('active');
-        currentQuestionIndex = 0;
-        score = 0;
-        loadQuestion();
-    }
-
-    function loadQuestion() {
-        clearInterval(timer);
-        timeLeft = 60;
-        answered = false;
-        updateTimerDisplay();
-        
-        document.getElementById('nextBtn').style.display = 'none';
-        document.getElementById('rationaleBox').classList.remove('visible');
-        document.getElementById('progressIndicator').innerText = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-
-        const q = questions[currentQuestionIndex];
-        document.getElementById('questionText').innerText = q.question;
-
-        // Shuffle options to randomize correct answer position
-        const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
-
-        const optionsGrid = document.getElementById('optionsGrid');
-        optionsGrid.innerHTML = '';
-
-        shuffledOptions.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = opt.text;
-            btn.onclick = () => selectOption(btn, opt, shuffledOptions);
-            optionsGrid.appendChild(btn);
-        });
-
-        startTimer();
-    }
-
-    function startTimer() {
-        timer = setInterval(() => {
-            timeLeft--;
-            updateTimerDisplay();
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                timeOutQuestion();
+            function normalizeText(text) {
+                return text.toLowerCase()
+                           .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // Remove pontuação para flexibilizar
+                           .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                           .trim();
             }
-        }, 1000);
-    }
 
-    function updateTimerDisplay() {
-        const badge = document.getElementById('timerBadge');
-        document.getElementById('timeLeft').innerText = timeLeft;
-        if (timeLeft <= 10) {
-            badge.classList.add('warning');
-        } else {
-            badge.classList.remove('warning');
-        }
-    }
-
-    function selectOption(selectedBtn, selectedOpt, allShuffledOptions) {
-        if (answered) return;
-        answered = true;
-        clearInterval(timer);
-
-        const buttons = document.querySelectorAll('.option-btn');
-        buttons.forEach((btn, idx) => {
-            btn.disabled = true;
-            if (allShuffledOptions[idx].correct) {
-                btn.classList.add('correct');
-            } else if (btn === selectedBtn && !selectedOpt.correct) {
-                btn.classList.add('incorrect');
+            function checkAnswer(id, correct) {
+                const input = document.getElementById('input-' + id);
+                const result = document.getElementById('result-' + id);
+                const userText = input.value.trim();
+                
+                const userNormalized = normalizeText(userText);
+                const correctNormalized = normalizeText(correct);
+                
+                if (userNormalized === correctNormalized) {
+                    if (userText.toLowerCase() === correct.toLowerCase()) {
+                        result.innerHTML = "✅ Perfect! Great job!";
+                        result.style.color = "#16a34a";
+                    } else {
+                        result.innerHTML = "✅ Correct! Just check capitalization/punctuation: <strong>" + correct + "</strong>";
+                        result.style.color = "#0891b2";
+                    }
+                    attempts[id] = 0;
+                } 
+                else {
+                    attempts[id]++;
+                    if (attempts[id] === 1) {
+                        result.innerHTML = "❌ Almost there! Check the spelling and try again!";
+                        result.style.color = "#ea580c";
+                    } else {
+                        result.innerHTML = "💡 Keep practicing! The correct answer is: <strong>" + correct + "</strong>";
+                        result.style.color = "#475569";
+                        attempts[id] = 0;
+                    }
+                }
             }
-        });
+        </script>
 
-        if (selectedOpt.correct) {
-            score++;
-        }
+        <!-- Frase 1 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876078&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Eu quero algo para comer.</div>
+            <input type="text" id="input-1" placeholder="Type sentence 1 here...">
+            <button onclick="checkAnswer(1, 'I want something to eat.')">Verify</button>
+            <p id="result-1" class="result"></p>
+        </div>
 
-        const rationaleBox = document.getElementById('rationaleBox');
-        rationaleBox.innerHTML = `<strong>Explanation:</strong> ${selectedOpt.rationale}`;
-        rationaleBox.classList.add('visible');
+        <!-- Frase 2 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876090&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Ele está considerando se aposentar mais cedo.</div>
+            <input type="text" id="input-2" placeholder="Type sentence 2 here...">
+            <button onclick="checkAnswer(2, 'He is considering taking early retirement.')">Verify</button>
+            <p id="result-2" class="result"></p>
+        </div>
 
-        document.getElementById('nextBtn').style.display = 'block';
-    }
+        <!-- Frase 3 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876099&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Ele está fazendo muito barulho agora mesmo.</div>
+            <input type="text" id="input-3" placeholder="Type sentence 3 here...">
+            <button onclick="checkAnswer(3, 'He is being very noisy right now.')">Verify</button>
+            <p id="result-3" class="result"></p>
+        </div>
 
-    function timeOutQuestion() {
-        if (answered) return;
-        answered = true;
+        <!-- Frase 4 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876087&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: O trem parte às 8:30 da noite de hoje.</div>
+            <input type="text" id="input-4" placeholder="Type sentence 4 here...">
+            <button onclick="checkAnswer(4, 'The train leaves at 8:30 PM tonight.')">Verify</button>
+            <p id="result-4" class="result"></p>
+        </div>
 
-        const buttons = document.querySelectorAll('.option-btn');
-        buttons.forEach((btn, idx) => {
-            btn.disabled = true;
-        });
+        <!-- Frase 5 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876084&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Você está sempre me interrompendo durante as reuniões.</div>
+            <input type="text" id="input-5" placeholder="Type sentence 5 here...">
+            <button onclick="checkAnswer(5, 'You are always interrupting me during meetings.')">Verify</button>
+            <p id="result-5" class="result"></p>
+        </div>
 
-        const rationaleBox = document.getElementById('rationaleBox');
-        rationaleBox.innerHTML = `<strong>Time's up!</strong> You ran out of time for this question.`;
-        rationaleBox.classList.add('visible');
+        <!-- Frase 6 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876075&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Peço desculpas por estar atrasado para a reunião.</div>
+            <input type="text" id="input-6" placeholder="Type sentence 6 here...">
+            <button onclick="checkAnswer(6, 'I apologize for being late to the meeting.')">Verify</button>
+            <p id="result-6" class="result"></p>
+        </div>
 
-        document.getElementById('nextBtn').style.display = 'block';
-    }
+        <!-- Frase 7 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876096&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Nós temos um quarto legal no hotel.</div>
+            <input type="text" id="input-7" placeholder="Type sentence 7 here...">
+            <button onclick="checkAnswer(7, 'We have a nice room in the hotel.')">Verify</button>
+            <p id="result-7" class="result"></p>
+        </div>
 
-    function nextQuestion() {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < questions.length) {
-            loadQuestion();
-        } else {
-            showScoreScreen();
-        }
-    }
+        <!-- Frase 8 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876093&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Adams faz um retorno maravilhoso. Ela está jogando um tênis magnífico nesta partida.</div>
+            <input type="text" id="input-8" placeholder="Type sentence 8 here...">
+            <button onclick="checkAnswer(8, 'Adams makes a wonderful return. She is playing magnificent tennis in this match.')">Verify</button>
+            <p id="result-8" class="result"></p>
+        </div>
 
-    function showScoreScreen() {
-        document.getElementById('quizScreen').classList.remove('active');
-        document.getElementById('scoreScreen').classList.add('active');
-        document.getElementById('finalScore').innerText = `${score}/${questions.length}`;
+        <!-- Frase 9 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876081&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: A população mundial está crescendo muito rápido.</div>
+            <input type="text" id="input-9" placeholder="Type sentence 9 here...">
+            <button onclick="checkAnswer(9, 'The population of the world is rising very fast.')">Verify</button>
+            <p id="result-9" class="result"></p>
+        </div>
 
-        let msg = "";
-        const percentage = (score / questions.length) * 100;
-        if (percentage === 100) {
-            msg = "Flawless victory! You have mastered the Present Simple and Present Continuous.";
-        } else if (percentage >= 80) {
-            msg = "Fantastic job! Your grammar skills are top-notch.";
-        } else if (percentage >= 50) {
-            msg = "Good effort! Review the rules on state verbs and temporary vs permanent situations to level up even more.";
-        } else {
-            msg = "Keep practicing! Review your presentation slides and try again.";
-        }
-        document.getElementById('scoreMessage').innerText = msg;
-    }
-
-    function restartQuiz() {
-        document.getElementById('scoreScreen').classList.remove('active');
-        startQuiz();
-    }
-</script>
-
+        <!-- Frase 10 -->
+        <div class="quiz-card">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2385876078&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            <div class="hint">💡 Dica: Você vê aquele homem ali?</div>
+            <input type="text" id="input-10" placeholder="Type sentence 10 here...">
+            <button onclick="checkAnswer(10, 'Do you see that man over there?')">Verify</button>
+            <p id="result-10" class="result"></p>
+        </div>
+    </div>
 </body>
 </html>
